@@ -16,6 +16,14 @@ def split_document(file_path):
     texts = text_splitter.split_documents(pages)
     return texts
 
-
+if __name__ == "__main__":
+    file_path = "BAJHLIP23020V012223.pdf"
+    texts = split_document(file_path)
+    
+    for i, text in enumerate(texts):
+        print(f"Chunk {i+1}:")
+        print(text.page_content[:200])  # Print first 200 characters of each chunk
+        print("Metadata:", text.metadata)
+        print("-" * 40)  # Separator for readability
 
 
