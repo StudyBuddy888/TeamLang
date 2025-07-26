@@ -7,8 +7,6 @@ from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import UnstructuredEmailLoader
 
 
-file_path = "BAJHLIP23020V012223.pdf"
-
 def load_document(file_path):  
     ext = os.path.splitext(file_path)[-1].lower()
 
@@ -23,8 +21,5 @@ def load_document(file_path):
 
     return loader.load()
 
-if __name__ == "__main__":
-    pages = load_document(file_path)
-    page1 = pages[0]
-    print(page1.metadata)  
+
 
