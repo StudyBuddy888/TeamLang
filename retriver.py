@@ -1,31 +1,24 @@
 from embedding_and_vector import create_vectorstore
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import LLMChainExtractor
-from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 
-vectorstore = create_vectorstore()
+# Step 1: Create your vector store
+vectorstore = create_vectorstore("BAJHLIP23020V012223.pdf")
 
 retriever = vectorstore.as_retriever(
-    search_type="mmr",
-    search_kwargs={"k": 10, "fetch_k": 25, "lambda_mult": 0.7}
+    search_type="mmr",   # better than 'similarity'
+    search_kwargs={
+        "k": 10,          # return top 10 relevant
+        "fetch_k": 25,    # fetch 25 candidates to re-rank
+        "lambda_mult": 0.7  # balance relevance vs diversity
+    }
 )
 
-llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=os.getenv("GOOGLE_API_KEY"))
-compressor = LLMChainExtractor.from_llm(llm)
+query = "Is knee surgery covered in a 3-month-old policy?"
+docs = retriever.invoke(query)
 
-compression_retriever = ContextualCompressionRetriever(
-    base_compressor=compressor,
-    base_retriever=retriever
-)
+for i, doc in enumerate(docs):
+    print(f"\n--- Chunk {i+1} ---")
+    print(f"Source: {doc.metadata.get('source', 'unknown')}")
+    print(doc.page_content[:400])
 
-query = "Knee surgery claim for 46M in Pune, 3-month policy"
-docs = compression_retriever.invoke(query)
 
-if not docs:
-    print("No documents retrieved for the query.")
-else:
-    print(f"Retrieved {len(docs)} document(s).")
-    for i, doc in enumerate(docs):
-        print(f"\n--- Document {i+1} ---\n")
-        print(doc.page_content[:500]) 
