@@ -4,7 +4,7 @@ from typing import List
 import requests
 import tempfile
 import os
-
+import time
 from document_spliting import split_document
 from embedding_and_vector import create_vectorstore
 from retriver import get_mmr_retriever
@@ -27,17 +27,23 @@ class QueryRequest(BaseModel):
 # ------------------- Prompt Template -------------------
 prompt = ChatPromptTemplate.from_template(
     """
-You are an insurance policy assistant. Based on the user's query and the relevant policy content, answer clearly and precisely.
-Only respond based on the policy. If not present, say so.
+You are an expert insurance policy assistant specializing in Indian health insurance plans. Your job is to accurately answer user questions strictly using the information provided in the policy content.
 
-Query: {question}
+- Always be precise and formal.
+- Do not make assumptions beyond the retrieved context.
+- If the policy does not explicitly contain the answer, respond with: "The policy document does not specify this information."
+- Include specific clause wording or context from the policy where applicable.
 
-Relevant policy context:
+QUESTION:
+{question}
+
+POLICY EXCERPTS (CONTEXT):
 {context}
 
-Answer:
+FINAL ANSWER:
 """
 )
+
 
 # ------------------- LLM Setup -------------------
 llm = ChatGoogleGenerativeAI(
@@ -73,7 +79,10 @@ async def process_query(payload: QueryRequest):
     # 3. Process all questions
     answers = []
     for question in payload.questions:
-        result = retrieval_chain.invoke({"question": question})
-        answers.append(result.strip())
-
-    return {"answers": answers}
+        try:
+            result = retrieval_chain.invoke({"question": question})
+            answers.append(result.strip())
+        except Exception as e:
+            print(f"Error for question: {question} -> {e}")
+            answers.append("Unable to process this question.")
+        time.sleep(5)
